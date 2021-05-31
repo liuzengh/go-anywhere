@@ -26,6 +26,18 @@ lc3. Longest Substring Without Repeating Characters
 
 >在 Go 语言中，一个string类型的值既可以被拆分为一个包含多个字符的序列，也可以被拆分为一个包含多个字节的序列。前者可以由一个以rune为元素类型的切片来表示，而后者则可以由一个以byte为元素类型的切片代表。 rune是 Go 语言特有的一个基本数据类型，它的一个值就代表一个字符，即：一个 Unicode 字符。比如，’G’、’o’、’爱’、’好’、’者’代表的就都是一个 Unicode 字符。
 
+lc6. ZigZag Conversion
+
+make 一个 slice：切片由指向数据的pointer, 切片长度以及容量三个属性来表示。
+```go
+// 创建一个长度为10，容量为100的切片，切片中的元素被初始化int类型的默认值0
+make([]int, 10, 100)
+```
+
+byte类型的默认值：byte是数值类型，等同于uint8, 其zero value是 0
+
+二维切片：切片是变长的，所以每个维度上的切片长度可以不同，这一点和 `vector<vector<T>>` 很像。
+
 ### Binary Search
 
 lc4. Median of Two Sorted Arrays

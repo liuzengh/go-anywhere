@@ -16,3 +16,35 @@ func lengthOfLongestSubstring(s string) int {
 	}
 	return result
 }
+
+// 将一个给定字符串 s 根据给定的行数 numRows ，以从上往下、从左到右进行 Z 字形排列。
+func convert(s string, numRows int) string {
+	if numRows == 1 || len(s) <= numRows {
+		return s
+	}
+	display := make([][]byte, numRows)
+	x, down := 0, true
+	for i := 0; i < len(s); i++ {
+		display[x] = append(display[x], s[i])
+		if down {
+			x++
+			if x == numRows {
+				down = false
+				x -= 2
+			}
+		} else {
+			x--
+			if x == -1 {
+				down = true
+				x += 2
+			}
+		}
+	}
+	result := make([]byte, 0, len(s))
+	for _, row := range display {
+		for _, item := range row {
+			result = append(result, item)
+		}
+	}
+	return string(result)
+}
