@@ -40,7 +40,7 @@ s2 := append(s1, 3, 5, 7)          // append multiple elements    s2 == []int{0,
 s3 := append(s2, s0...)            // append a slice              s3 == []int{0, 0, 2, 3, 5, 7, 0, 0}
 s4 := append(s3[3:6], s3[2:]...)   // append overlapping slice    s4 == []int{3, 5, 7, 2, 3, 5, 7, 0, 0}
 ```
-思路：找到一个合适划分 $(splitA, splitB)$ , 使得划分后得到的集合 $left\_part$ 和 $right\_part$ 满足： $max(left\_part) \le min(right\_part), |left\_part| - |right\_part| \le 1$
+思路：找到一个合适划分 `(splitA, splitB)` , 使得划分后得到的集合 `left_part` 和 `right_part` 满足： `max(left_part) <= min(right_part), |left_part| - |right_part| <= 1`
 ```
           left_part          |         right_part
     A[0], A[1], ..., A[i-1]  |  A[i], A[i+1], ..., A[m-1]
