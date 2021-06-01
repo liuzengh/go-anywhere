@@ -2,7 +2,22 @@
 code, docs and ideas about go
 
 
-## 
+## RPC
+A
+```go
+func (t *T) MethodName(argType T1, replyType *T2) error
+```
+
+- 第一个参数代表调用者提供的参数
+- 第二个参数代表返回给调用者的参数
+- 方法的返回值，如果非nil，将被作为字符串回传，在客户端看来就和errors.New创建的一样。如果返回了错误，回复的参数将不会被发送给客户端。
+
+Exported: 
+Inside a package, any comment immediately preceding a top-level declaration serves as a doc comment for that declaration. Every exported (capitalized) name in a program should have a doc comment.
+
+服务端：单个连接调用 `ServerConn`, 一般而言调用 `Accept` 创建网络监听器；对于 Http监听器，调用 `HandleHttp` 和 `http.Serve`。
+
+
 
 ## Leetcode
 
@@ -37,6 +52,27 @@ make([]int, 10, 100)
 byte类型的默认值：byte是数值类型，等同于uint8, 其zero value是 0
 
 二维切片：切片是变长的，所以每个维度上的切片长度可以不同，这一点和 `vector<vector<T>>` 很像。
+
+lc8. String to Integer (atoi)
+
+有限状态机: 开始状态为1，终止状态为2，下图中没有表示出来的是：在状态4的时候，当超过数值取值范围时，会截断，然后转向终止状态。
+
+```
+┌──┐
+│ ┌┴──┐        '+'or'-' ┌───┐
+│ │ 1 ├───────┬────────►| 3 ├───┐
+│ └─▲─┤       │         └┬──┘   |
+└───┘ │       │digit     │digit │
+ ' '  │       │        ┌─▼─┐    │
+      │       └────────► 4 ├─┐  │
+      │other           └┬─▲┘ │  │
+      │                 | └──┘  |
+    ┌─▼─┐               | digit | 
+    │ 2 ◄───────────────┘       │
+    └─▲─┘ other                 │
+      └─────────────────────────┘
+        other
+```
 
 ### Binary Search
 
@@ -83,4 +119,19 @@ picture := make([][]uint8, YSize) // One row per unit of y.
 for i := range picture {
 	picture[i] = make([]uint8, XSize)
 }
+```
+
+### Math
+
+lc7. Reverse Integer
+
+数值类型的范围： `math` 包含了数值的范围， 如： `math.MaxInt32 = 2**31 - 1, math.MinInt32 = -2**31`
+
+lc9. Palindrome Number
+
+字符串转换：strconv包中实现了字符串和基本类型的转换，如最为常见的数值转换：
+
+```go
+i, err := strconv.Atoi("-42")
+s := strconv.Itoa(-42)
 ```

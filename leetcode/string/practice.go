@@ -1,5 +1,7 @@
 package string
 
+import "math"
+
 // 给定一个字符串，请你找出其中不含有重复字符的 最长子串 的长度。
 func lengthOfLongestSubstring(s string) int {
 	hasSeen := make(map[byte]int)
@@ -47,4 +49,54 @@ func convert(s string, numRows int) string {
 		}
 	}
 	return string(result)
+}
+
+// 请你来实现一个 myAtoi(string s) 函数，使其能将字符串转换成一个 32 位有符号整数（类似 C/C++ 中的 atoi 函数）
+func myAtoi(s string) int {
+	state := 1
+	sign := true
+	var result int
+	for _, ch := range s {
+		if state == 1 {
+			if ch == ' ' {
+
+			} else if ch == '+' || ch == '-' {
+				state = 3
+				if ch == '-' {
+					sign = false
+				}
+			} else if '0' <= ch && ch <= '9' {
+				state = 4
+				result = int(ch - '0')
+			} else {
+				break
+			}
+		} else if state == 3 {
+			if '0' <= ch && ch <= '9' {
+				state = 4
+				result = int(ch - '0')
+			} else {
+				break
+			}
+		} else {
+			// state == 4
+			if ch < '0' || '9' < ch {
+				break
+			}
+			result = result*10 + int(ch-'0')
+			if sign && result > math.MaxInt32 {
+				return math.MaxInt32
+			}
+			if !sign && result > math.MaxInt32+1 {
+				return math.MinInt32
+			}
+
+		}
+	}
+	// state 2
+
+	if !sign {
+		result = -result
+	}
+	return result
 }
