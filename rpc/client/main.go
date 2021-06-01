@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"fmt"
@@ -13,11 +13,13 @@ func main() {
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
-	args := &server.Args{7, 8}
+	args := &server.Args{A: 7, B: 8}
 	var reply int
-	err = client.Call("Arith.Multiply", args, &reply)
-	if err != nil {
+	// err = client.Call("Arith.Multiply", args, &reply)
+	call := client.Go("Arith.Multiply", args, &reply, nil)
+	replyCall := <-call.Done
+	if replyCall.Error != nil {
 		log.Fatal("arith error:", err)
 	}
-	fmt.Printf("Arith: %d*%d=%d", args.A, args.B, reply)
+	fmt.Printf("Arith: %d*%d=%d\n", args.A, args.B, reply)
 }
