@@ -111,7 +111,7 @@ RPC是如何处理丢包、网络中断、服务器慢、服务器崩溃等故�
 
 go中RPC是采用的是一种简单的“至多一次”策略：
 
-1. 打开的TCP连接
+1. 打开TCP连接
 2. 写请求到TCP连接RPC， 从来没有重新去请求，所以服务器不会看到重复的请求。
 3. RPC代码返回一个错误，如果没有得到一个答复。
    - 也许是TCP超时
@@ -236,3 +236,9 @@ lc9. Palindrome Number
 i, err := strconv.Atoi("-42")
 s := strconv.Itoa(-42)
 ```
+
+### Sort
+
+lc451. Sort Characters By Frequency
+
+Go中的接口提供了一种方法来指定对象的行为:如果有什么东西可以做到这一点，那么它可以在这里使用。一个类型可以实现多个接口。例如，如果一个集合实现了 `sort.Interface` 接口，那么它可以通过package sort中的方法进行排序。排序接口，包含`Len()`， `Less(i, j int) bool`和 `Swap(i, j int)`
