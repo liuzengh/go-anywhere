@@ -1,7 +1,395 @@
 # go-anywhere
 code, docs and ideas about go
 
+## Concurrency
 
+goroutine 是由 go runtime 管理的轻量级线程。goroutines 都运行在相同的地址空间，因此获取共享内存的时候必须进行同步。`sync` 包中提供了一些有用的同步原语如 `Mutex` 。
+
+### Channel
+
+`channel` 是有类型的管道，可以使用 `<-` 操作符在 `channel` 上发送和接收值，`<-` 箭头上的方向指明了数据流动的方向。例如下面的代码把对一个切片中数字求和的任务，平均分配给两个goroutine。
+
+```go
+func sum(s []int, c chan int) {
+	sum := 0
+	for _, v := range s {
+		sum += v
+	}
+	c <- sum // send sum to c
+}
+
+func main() {
+	s := []int{7, 2, 8, -9, 4, 0}
+
+	c := make(chan int)
+	go sum(s[:len(s)/2], c)
+	go sum(s[len(s)/2:], c)
+	x, y := <-c, <-c // receive from c
+
+	fmt.Println(x, y, x+y)
+}
+```
+
+对于无缓冲的 `channel` , 发送方和接受方在对方没有准备好之前都处于阻塞状态，类似于java中的同步队列 `SynchronousQueue` 。所以下面的两段代码都能打印出 "hello, world" 这条消息。
+
+```go
+var done = make(chan bool) 
+var msg string
+func aGoroutine() {
+    msg = "hello, world"
+    done <- true
+}
+func main() {
+    go aGoroutine()
+    <-done
+    println(msg)
+}
+```
+```go
+var done = make(chan bool)
+var msg string
+
+func aGoroutine() {
+    msg = "hello, world"
+    <-done
+}
+func main() {
+    go aGoroutine()
+    done <- true
+    println(msg)
+}
+```
+
+ 对于带有缓存的 `channel` , 当缓存满时发送方将阻塞，当缓存空时接收方将阻塞，类似于java中的有界阻塞队列`ArrayBlockingQueue`和` LinkedBlockingQueue`。例如下面这段代码发送者将一直阻塞，从而导致死锁。
+
+ ```go
+ func main() {
+	ch := make(chan int, 2)
+	ch <- 1
+	ch <- 2
+	ch <- 3
+	fmt.Println(<-ch)
+	fmt.Println(<-ch)
+}
+```
+
+`channle` 使得goroutines可以不显式锁或条件变量的情况下进行同步。可以使用 `range` 循环来接受channel上的值，直到发送方主动 close channel时才退出循环。
+
+```go
+func fibonacci(n int, c chan int) {
+	x, y := 0, 1
+	for i := 0; i < n; i++ {
+		c <- x
+		x, y = y, x+y
+	}
+	close(c)
+}
+
+func main() {
+	c := make(chan int, 10)
+	go fibonacci(cap(c), c)
+	for i := range c {
+		fmt.Println(i)
+	}
+}
+```
+
+注意: 只有发送方才应该关闭通道，而不是接收方。给一个已经关闭的 channle发送值会引起panic。另外，channel于file不同，通常并不需要关闭channel。只有当接收方必须被告知没有更多的值时才需要关闭，例如终止一个range循环。
+
+
+#### Select
+
+`select` 语句和 c语言里面 `switch-case` 用法很像， 可以让一个goroutine对等待在多个 channel 上。`select` 将一直阻塞, 直到其中的一个 `case` 可以运行才去执行对应的 `case`。 如果有多个 `case` 都准备好了，它会随机选择一个 `case` 执行。如某个case可以发送退出循环的消息或计时消息或超时消息等。
+
+```go
+func fibonacci(c, quit chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c <- x:
+			x, y = y, x+y
+		case <-quit:
+			fmt.Println("quit")
+			return
+		}
+	}
+}
+
+func main() {
+	c := make(chan int)
+	quit := make(chan int)
+	go func() {
+		for i := 0; i < 10; i++ {
+			fmt.Println(<-c)
+		}
+		quit <- 0
+	}()
+	fibonacci(c, quit)
+}
+```
+
+```go
+func main() {
+	tick := time.Tick(100 * time.Millisecond)
+	boom := time.After(500 * time.Millisecond)
+	for {
+		select {
+		case <-tick:
+			fmt.Println("tick.")
+		case <-boom:
+			fmt.Println("BOOM!")
+			return
+		default:
+			fmt.Println("    .")
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+}
+```
+
+应用1：判断等价二叉树
+```go
+package main
+
+import (
+	"fmt"
+	"golang.org/x/tour/tree"
+//	"reflect"
+)
+
+// Walk walks the tree t sending all values
+// from the tree to the channel ch.
+func Walk(t *tree.Tree, ch chan int) {
+	if t == nil {
+		return
+	}
+
+	Walk(t.Left, ch)
+	ch <- t.Value
+	Walk(t.Right, ch)
+}
+
+// Same determines whether the trees
+// t1 and t2 contain the same values.
+func Same(t1, t2 *tree.Tree) bool {
+	ch1 := make(chan int, 1)
+	ch2 := make(chan int, 1)
+	go Walk(t1, ch1)
+	go Walk(t2, ch2)
+	// result1 := []int{}
+	// result2 := make([]int, 10)
+	for i := 0; i < 10; i++ {
+		// result1 = append(result1, <-ch1)
+		// result2[i] = <-ch2
+		x, y := <-ch1, <-ch2
+		if x != y {
+			return false
+		}
+		
+	}
+	return true
+	// return reflect.DeepEqual(result1, result2)
+}
+
+func main() {
+	/*
+		ch := make(chan int)
+		go Walk(tree.New(1), ch)
+		for i := 0; i < 10; i++ {
+			c := <-ch
+			fmt.Println(c)
+		}
+	*/
+	/*
+		for c := range ch {
+			fmt.Println(c)
+		}
+	*/
+
+	fmt.Println(Same(tree.New(1), tree.New(2)))
+	fmt.Println(Same(tree.New(1), tree.New(1)))
+}
+```
+```go
+package tree // import "golang.org/x/tour/tree"
+
+import (
+	"fmt"
+	"math/rand"
+)
+
+// A Tree is a binary tree with integer values.
+type Tree struct {
+	Left  *Tree
+	Value int
+	Right *Tree
+}
+
+// New returns a new, random binary tree holding the values k, 2k, ..., 10k.
+func New(k int) *Tree {
+	var t *Tree
+	for _, v := range rand.Perm(10) {
+		t = insert(t, (1+v)*k)
+	}
+	return t
+}
+
+func insert(t *Tree, v int) *Tree {
+	if t == nil {
+		return &Tree{nil, v, nil}
+	}
+	if v < t.Value {
+		t.Left = insert(t.Left, v)
+	} else {
+		t.Right = insert(t.Right, v)
+	}
+	return t
+}
+
+func (t *Tree) String() string {
+	if t == nil {
+		return "()"
+	}
+	s := ""
+	if t.Left != nil {
+		s += t.Left.String() + " "
+	}
+	s += fmt.Sprint(t.Value)
+	if t.Right != nil {
+		s += " " + t.Right.String()
+	}
+	return "(" + s + ")"
+}
+```
+应用2： 并发网络爬虫
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+type SafeCache struct {
+	mu        sync.Mutex
+	container map[string]bool
+}
+
+func (safe_cache *SafeCache) Set(key string) {
+	safe_cache.mu.Lock()
+	safe_cache.container[key] = true
+	safe_cache.mu.Unlock()
+}
+
+func (safe_cache *SafeCache) Get(key string) bool {
+	safe_cache.mu.Lock()
+	defer safe_cache.mu.Unlock()
+	return safe_cache.container[key]
+}
+
+type Fetcher interface {
+	// Fetch returns the body of URL and
+	// a slice of URLs found on that page.
+	Fetch(url string) (body string, urls []string, err error)
+}
+
+// Crawl uses fetcher to recursively crawl
+// pages starting with url, to a maximum of depth.
+func Crawl(url string, depth int, fetcher Fetcher, cache SafeCache) {
+	// TODO: Fetch URLs in parallel.
+	// TODO: Don't fetch the same URL twice.
+	// This implementation doesn't do either:
+	if depth <= 0 {
+		return
+	}
+	/*
+	cache.mu.Lock()
+	_, exist := cache.container[url]
+	cache.mu.Unlock()
+	*/
+	if cache.Get(url) {
+		fmt.Println("in cache")
+		return
+	}
+	
+
+	body, urls, err := fetcher.Fetch(url)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	/*
+	cache.mu.Lock()
+	cache.container[url] = true
+	cache.mu.Unlock()
+	*/
+	cache.Set(url)
+
+	fmt.Printf("found: %s %q\n", url, body)
+	for _, u := range urls {
+		go Crawl(u, depth-1, fetcher, cache)
+	}
+	time.Sleep(time.Second)
+	return
+}
+
+func main() {
+	cache := SafeCache{container: make(map[string]bool)}
+	Crawl("https://golang.org/", 4, fetcher, cache)
+}
+
+// fakeFetcher is Fetcher that returns canned results.
+type fakeFetcher map[string]*fakeResult
+
+type fakeResult struct {
+	body string
+	urls []string
+}
+
+func (f fakeFetcher) Fetch(url string) (string, []string, error) {
+	if res, ok := f[url]; ok {
+		return res.body, res.urls, nil
+	}
+	return "", nil, fmt.Errorf("not found: %s", url)
+}
+
+// fetcher is a populated fakeFetcher.
+var fetcher = fakeFetcher{
+	"https://golang.org/": &fakeResult{
+		"The Go Programming Language",
+		[]string{
+			"https://golang.org/pkg/",
+			"https://golang.org/cmd/",
+		},
+	},
+	"https://golang.org/pkg/": &fakeResult{
+		"Packages",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/cmd/",
+			"https://golang.org/pkg/fmt/",
+			"https://golang.org/pkg/os/",
+		},
+	},
+	"https://golang.org/pkg/fmt/": &fakeResult{
+		"Package fmt",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/pkg/",
+		},
+	},
+	"https://golang.org/pkg/os/": &fakeResult{
+		"Package os",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/pkg/",
+		},
+	},
+}
+
+```
 ## RPC
 
 ### 消息传递
