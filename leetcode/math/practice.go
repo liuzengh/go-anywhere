@@ -1,6 +1,9 @@
 package math
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 /*
 func reverse(x int) int {
@@ -77,4 +80,19 @@ func isPalindrome(x int) bool {
 		}
 	}
 	return true
+}
+
+//给你一个整数，将其转为罗马数字。
+func intToRoman(num int) string {
+	vals := []int{1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1}
+	syms := []string{"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"}
+	result := make([]string, 0, 100)
+	for i, val := range vals {
+		x := num / val
+		num = num - x*val
+		for j := 0; j < x; j++ {
+			result = append(result, syms[i])
+		}
+	}
+	return strings.Join(result, "")
 }

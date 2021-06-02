@@ -222,6 +222,35 @@ for i := range picture {
 }
 ```
 
+lc10. Regular Expression Matching
+
+以下用python写得伪代码很好的应用了带备忘录的动态规划方法。
+```python
+def isMatch(self, s: str, p: str):
+    text, pattern = s, p
+    memo = {}
+    def dp(i, j):
+        if (i, j) not in memo:
+            if j == len(pattern):
+                ans = i == len(text)
+            else:
+                first_match = i < len(text) and pattern[j] in {text[i], '.'}
+                if j+1 < len(pattern) and pattern[j+1] == '*':
+                    ans = dp(i, j+2) or first_match and dp(i+1, j)
+                else:
+                    ans = first_match and dp(i+1, j+1)
+            memo[i, j] = ans
+        return memo[i, j]
+    return dp(0, 0)
+```
+
+go中闭包中使用递归：可以用先声明再定义的方式
+```go
+var recur func()
+recur = func(){
+    recur()
+}
+```
 ### Math
 
 lc7. Reverse Integer
@@ -236,9 +265,26 @@ lc9. Palindrome Number
 i, err := strconv.Atoi("-42")
 s := strconv.Itoa(-42)
 ```
+lc12. Integer to Roman
 
+预先定义符号表
+
+```go
+vals := [...]int {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1}
+syms := [...]string{"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"}
+```
 ### Sort
 
 lc451. Sort Characters By Frequency
 
 Go中的接口提供了一种方法来指定对象的行为:如果有什么东西可以做到这一点，那么它可以在这里使用。一个类型可以实现多个接口。例如，如果一个集合实现了 `sort.Interface` 接口，那么它可以通过package sort中的方法进行排序。排序接口，包含`Len()`， `Less(i, j int) bool`和 `Swap(i, j int)`
+
+### Two Pointers
+
+lc11. Container With Most Water
+
+`min(A[left], A[right]) * (right - left)`
+
+1. 在初始时，左右指针分别指向数组的左右两端
+2. 求出当前双指针对应的容器的容量
+3. 对应数字较小的那个指针以后不可能作为容器的边界了，将其丢弃，并移动对应的指针。
