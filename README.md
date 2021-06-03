@@ -388,7 +388,6 @@ var fetcher = fakeFetcher{
 		},
 	},
 }
-
 ```
 ## RPC
 
@@ -563,6 +562,8 @@ lc8. String to Integer (atoi)
         other
 ```
 
+lc14. Longest Common Prefix
+
 ### Binary Search
 
 lc4. Median of Two Sorted Arrays
@@ -661,6 +662,9 @@ lc12. Integer to Roman
 vals := [...]int {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1}
 syms := [...]string{"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"}
 ```
+
+lc13. Roman to Integer
+
 ### Sort
 
 lc451. Sort Characters By Frequency
@@ -676,3 +680,50 @@ lc11. Container With Most Water
 1. 在初始时，左右指针分别指向数组的左右两端
 2. 求出当前双指针对应的容器的容量
 3. 对应数字较小的那个指针以后不可能作为容器的边界了，将其丢弃，并移动对应的指针。
+
+### 单调栈
+
+lc42. Trapping Rain Water
+
+给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+
+维护一个单调栈，单调栈存储的是下标，满足从栈底到栈顶的下标对应的数组 `height` 中的元素递减。
+
+从左到右遍历数组，遍历到下标 i 时，如果栈内至少有两个元素，记栈顶元素为 `top`，`top` 的下面一个元素是 `left`，则一定有 `height[left] >= height[top]`。如果`height[left] > height[top]` ，则得到一个可以接雨水的区域，该区域的宽度是 `i−left−1`，高度是 `min(height[left], height[i]) - height[top]`，根据宽度和高度即可计算得到该区域能接的雨水量。
+
+参考资料： https://oi-wiki.org/ds/monotonous-stack/
+
+```go
+func trap(height []int) int {
+    s, top := []int{}, -1
+    var result int
+    for index, item := range height {
+        if top == -1  || item <= height[s[top]]{
+            top++
+            s = append(s, index)
+        } else {
+            for -1 < top  && height[s[top]] < item {
+                top--
+                if top == -1 {
+                    break
+                }
+                distance := index - s[top] - 1 
+                delta := MinInt(item, height[s[top]]) - height[s[top+1]] 
+                result += distance * delta 
+                
+            }
+            s = s[0:top+1]
+            s = append(s, index)
+            top++
+        }
+    }
+    return result
+}
+
+func MinInt(x, y int) int{
+    if x < y {
+        return x
+    }
+    return y
+}
+```
