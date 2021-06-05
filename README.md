@@ -1,6 +1,27 @@
 # go-anywhere
 code, docs and ideas about go
 
+## 进程和线程
+
+todo: gorutinue 探究
+
+### 操作系统对于“线程”概念的不同实现
+
+从概念上来说，用户线程运行在内核之上的，由用户线程库自行进行管理，而内核线程则由操作系统直接支持和管理。所以，用户线程要运行在内核之上，则必须和内核线程存在某种对应关系，这种对应关系可以分为：many-to-one, one-to-one和many-to-many。
+
+以many-to-many为例，在实现上需要在用户线程和内核线程之间提供称为轻量级进程(lightweight process, LWP)的中间数据结构。 对于用户线程库而言，LWP就像是一个虚拟处理器，应用程序可以在其上调度用户线程运行。每个LWP和一个内核线程关联，而对应的内核线程是在由操作系统调度，运行在物理处理器的。如果内核线程阻塞(例如在等待I/O操作完成时)，LWP也会阻塞，处于调用链的上的LWP的用户级线程也会阻塞。
+
+从实现上来说，Linux采用的是one-to-one的模型，Linux是没有线程的概念，所谓的线程实际上是被实现为标准的进程。Liunx内核不提供任何特殊的调度信息和数据结构来表示线程。线程本质上就是一个进程，只不过该进程和其他进程共享某些资源。这一点可以从Linux“线程”的创建和普通进程的创建上得到验证。进程在内核由对应的 task_struct 数据结构表示。创建线程调用的 clone() 函数不过是指定了创建的新的进程中父子进程共享了更多的资源，如地址空间、文件资源、文件描述符和信号处理函数。
+
+```c
+//fork() 
+clone(SIGCHLD, 0);  
+//vfork() 
+clone(CLONE_VFORK | CLONE_VM | SIGCHLD, 0);
+// for thread
+clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, 0);
+```
+
 ## Concurrency
 
 goroutine 是由 go runtime 管理的轻量级线程。goroutines 都运行在相同的地址空间，因此获取共享内存的时候必须进行同步。`sync` 包中提供了一些有用的同步原语如 `Mutex` 。
