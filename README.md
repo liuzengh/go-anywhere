@@ -1,6 +1,9 @@
 # go-anywhere
 code, docs and ideas about go
 
+## LevelDB
+
+
 ## 进程和线程
 
 todo: gorutinue 探究
@@ -540,6 +543,9 @@ lc2. Add Two Numbers
 
 内存分配：作为一种限制情况，如果一个 composite literal 根本不包含字段，它将为该类型创建一个零值。表达式 `new(File)` 和 `&File{}`是等价的。
 
+lc21. 合并两个有序链表
+
+
 ### String
 
 lc3. Longest Substring Without Repeating Characters
@@ -709,6 +715,12 @@ lc15. 3Sum
 当我们需要枚举数组中的两个元素时，如果我们发现随着第一个元素的递增，第二个元素是递减的，那么就可以使用双指针的方法，将枚举的时间复杂度从 `O(N^2)` 减少至 `O(N)`。
 
 lc16. 3Sum Closest
+
+lc19. 删除链表的倒数第 N 个结点
+
+前后指针。
+
+
 
 ### 单调栈
 
@@ -906,3 +918,9 @@ func largestRectangleArea(heights []int) int {
 lc17. Letter Combinations of a Phone Number
 
 string之间可以用运算 `+` 进行连接，类似于c++里面的操作。
+
+### Stack
+
+lc20.有效的括号
+
+编译原理里面的词法分析。
