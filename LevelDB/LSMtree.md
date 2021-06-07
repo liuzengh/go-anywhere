@@ -76,6 +76,10 @@ LSM树最初的设计是为了减少磁盘的写和查找开销。基于Flash的
 后，大量的BigData存储系统(如Apache Cassandra、Apache AsterixDB和MongoDB)增加了对LSM树的支持，大多数实现版本在每一层都有多个树。
 
 
-#### 总结
+#### 总结和补充说明
 
 1. LSM树的结构又一次体现了系统设计里面的trade-off, 为了能够得到最大的写入能力，不得不牺牲就部分读的性能。
+
+#### 参考文献
+
+1. [Database System Concepts(Seventh Edition, Avi Silberschatz Henry F. KorthS. Sudarshan)](https://www.db-book.com/db7/index.html)
